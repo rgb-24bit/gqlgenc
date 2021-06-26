@@ -195,7 +195,11 @@ func unmarshal(data []byte, res interface{}) error {
 		return errors
 	}
 
-	if err := json.Unmarshal(resp.Data, res); err != nil {
+	decoder := json.NewDecoder(bytes.NewBuffer(resp.Data))
+
+	decoder.UseNumber()
+
+	if err := decoder.Decode(res); err != nil {
 		return fmt.Errorf("failed to decode data into response %s: %w", string(data), err)
 	}
 
