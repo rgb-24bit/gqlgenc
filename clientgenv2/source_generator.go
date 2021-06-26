@@ -80,9 +80,24 @@ func NewSourceGenerator(cfg *config.Config, client config.PackageConfig) *Source
 }
 
 func (r *SourceGenerator) NewResponseFields(selectionSet ast.SelectionSet) ResponseFieldList {
-	responseFields := make(ResponseFieldList, 0, len(selectionSet))
+	var (
+		responseFields        = make(ResponseFieldList, 0, len(selectionSet))
+		responseFieldsMapping = make(map[string]bool, len(selectionSet))
+	)
+
 	for _, selection := range selectionSet {
-		responseFields = append(responseFields, r.NewResponseField(selection))
+		responseField := r.NewResponseField(selection)
+
+		if responseField.IsInlineFragment {
+			for _, field := range responseField.ResponseFields {
+				if !responseFieldsMapping[field.Name] {
+					responseFields = append(responseFields, field)
+					responseFieldsMapping[field.Name] = true
+				}
+			}
+		} else {
+			responseFields = append(responseFields, responseField)
+		}
 	}
 
 	return responseFields
